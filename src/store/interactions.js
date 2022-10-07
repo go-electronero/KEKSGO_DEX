@@ -53,6 +53,8 @@ export const loadToken = async (web3, networkId, dispatch) => {
     dispatch(tokenLoaded(token));
     return token;
   } catch (error) {
+    console.log("TOKEN_ADDRESS",TOKEN_ADDRESS);
+    console.log("ERROR",error);
     console.log(
       "Contract not deployed to the current network. Please select another network with Metamask."
     );
@@ -70,6 +72,8 @@ export const loadExchange = async (web3, networkId, dispatch) => {
     dispatch(exchangeLoaded(exchange));
     return exchange;
   } catch (error) {
+    console.log("EXCHANGE_ADDRESS",EXCHANGE_ADDRESS);
+    console.log("ERROR",error);
     console.log(
       "Contract not deployed to the current network. Please select another network with Metamask."
     );
