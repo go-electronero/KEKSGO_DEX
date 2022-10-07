@@ -20,7 +20,8 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
     }
 
     address public constant ETHER = address(0); //allows as to store Ether in tokens mapping with blank address
-    address private _feeAccount; // the acccount that receives exchange fees
+    address private _feeToSetter; // the acccount that sets the exchange fees receiver & percentage
+    address payable private _feeAccount; // the acccount that receives exchange fees 
     uint256 private _feePercent; // the fee percentage
     uint256 private _orderCount;
 
@@ -117,7 +118,7 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
     constructor(address feeAccount_, uint256 feePercent_) {
         require(feeAccount_ != address(0), "Fee account cannot be address zero");
         require(feePercent_ != 0, "Fee percent canot be zero");
-        _feeAccount = feeAccount_;
+        _feeAccount = payable(feeAccount_);
         _feePercent = feePercent_;
     }
 
@@ -130,6 +131,19 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
         depositEther();
     }
 
+    function setFeeToSetter(address payable feeToSetter) public virtual {
+        _feeToSetter = feeToSetter;
+    }
+
+    function setFeeTo(address payable feeTo) public virtual {
+        require(address(_msgSender()) == _feeToSetter);
+        _feeAccount = feeTo;
+    }
+    
+    function setFee(uint256 fee) public virtual {
+        require(address(_msgSender()) == _feeToSetter);
+        _feePercent = fee;
+    }
     /**
      * @dev The function allows users to deposit Ether to exchange.
      *
