@@ -88,7 +88,7 @@ const showForm = (props) => {
         <table className="table table-dark table-sm small">
           <tbody>
             <tr>
-              <td>ESKO</td>
+              <td>Token</td>
               <td>{tokenBalance}</td>
               <td>{exchangeTokenBalance}</td>
             </tr>
@@ -153,7 +153,7 @@ const showForm = (props) => {
         <table className="table table-dark table-sm small">
           <tbody>
             <tr>
-              <td>ESKO</td>
+              <td>Token</td>
               <td>{tokenBalance}</td>
               <td>{exchangeTokenBalance}</td>
             </tr>
