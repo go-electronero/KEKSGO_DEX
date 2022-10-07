@@ -22,14 +22,15 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
     address public constant ETHER = address(0); //allows as to store Ether in tokens mapping with blank address
     address private _feeToSetter; // the acccount that sets the exchange fees receiver & percentage
     address payable private _feeAccount; // the acccount that receives exchange fees 
-    uint256 private _feePercent; // the fee percentage
+    mapping(address => uint256) private _feePercent; // the fee percentage
+
     uint256 private _orderCount;
     uint256 private bp; // basis points enables lower fees with wider range in calculation
 
     // Mapping from token address to mapping from user address to amount of tokens.
     mapping(address => mapping(address => uint256)) private _tokens;
     // Mapping from order Id to Order object.
-    mapping(uint256 => Order) private _orders;
+    mapping(uint256 => Order) public _orders;
     // Mapping from order Id to bool ( whether the order was canceled ).
     mapping(uint256 => bool) private _orderCancelled;
     // Mapping from order Id to bool ( whether the order was filled ).
@@ -114,13 +115,11 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
     /**
      * @dev Sets up the `_feeAccount` and `_feePercent`.
      * @param feeAccount_ the address to which all fees will be transferred.
-     * @param feePercent_ percentage of fees from each transaction to be charged.
      */
-    constructor(address feeAccount_, uint256 feePercent_) {
+    constructor(address feeAccount_) {
         require(feeAccount_ != address(0), "Fee account cannot be address zero");
-        require(feePercent_ != 0, "Fee percent canot be zero");
         _feeAccount = payable(feeAccount_);
-        _feePercent = feePercent_;
+        _feePercent[ETHER] = 5000000000000000;
     }
 
     /// @dev Fallback: reverts if Ether is sent to this smart contract by mistake
@@ -145,7 +144,35 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
         require(address(_msgSender()) == _feeToSetter);
         require(uint256(fee) <= uint256(1000),"fee must be less than 10%");
         require(uint256(fee) >= uint256(10),"fee must be greater than 0.1%");
-        _feePercent = fee;
+        _feePercent[ETHER] = fee;
+    }
+    
+    function setTokenFee(address token, uint256 fee) public virtual {
+        require(address(_msgSender()) == _feeToSetter);
+        require(uint256(fee) <= uint256(1000),"fee must be less than 10%");
+        require(uint256(fee) >= uint256(10),"fee must be greater than 0.1%");
+        _feePercent[token] = fee;
+    }
+    
+    function withdrawFees(address token) public virtual returns(bool) {
+        require(IERC20(token).transfer(_feeAccount, _tokens[token][_feeAccount]));
+        _tokens[token][_feeAccount] -= _tokens[token][_feeAccount];
+        return true;
+    }
+    
+    function returnTokenFees(address token) public virtual returns(uint) {
+        return _tokens[token][_feeAccount];
+    }
+    
+    function returnNativeFees() public virtual returns(uint) {
+        return _tokens[ETHER][_feeAccount];
+    }
+    
+    function withdrawNativeFees() public virtual returns(bool) {
+        (bool success,) = payable(_feeAccount).call{value: _tokens[ETHER][_feeAccount]}("");
+        require(success == true);
+        _tokens[ETHER][_feeAccount] -= _tokens[ETHER][_feeAccount];
+        return success;
     }
     /**
      * @dev The function allows users to deposit Ether to exchange.
@@ -256,10 +283,42 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
         uint256 amountGet_,
         address tokenGive_,
         uint256 amountGive_
-    ) public {
+    ) public payable override {
         require(amountGet_ != 0, "Getting amount cannot be zero");
         require(amountGive_ != 0, "Giving amount cannot be zero");
         require(_tokens[tokenGive_][_msgSender()] >= amountGive_, "Must deposit token to make orders in token!");
+        // maker fee in ether
+        uint256 _feeAmount = _feePercent[ETHER];
+        require(msg.value >= uint(_feeAmount),"Not enough fee");
+        _tokens[ETHER][_feeAccount] += _feeAmount;
+        _orderCount = _orderCount + 1;
+        _orders[_orderCount] = Order(
+            _orderCount,
+            _msgSender(),
+            tokenGet_,
+            amountGet_,
+            tokenGive_,
+            amountGive_,
+            block.timestamp
+        );
+        emit OrderCreated(_orderCount, _msgSender(), tokenGet_, amountGet_, tokenGive_, amountGive_, block.timestamp);
+    }
+
+    function makeOrderFeeInToken(
+        address tokenGet_,
+        uint256 amountGet_,
+        address tokenGive_,
+        uint256 amountGive_
+    ) public override {
+        require(amountGet_ != 0, "Getting amount cannot be zero");
+        require(amountGive_ != 0, "Giving amount cannot be zero");
+        require(_tokens[tokenGive_][_msgSender()] >= amountGive_, "Must deposit token to make orders in token!");
+        // maker fee in token
+        uint256 _feeAmount = (amountGive_ * _feePercent[tokenGive_]) / (bp);
+        require(uint(IERC20(tokenGive_).balanceOf(_msgSender())) >= uint(_feeAmount),"Not enough fee");
+        _tokens[tokenGive_][_feeAccount] += _feeAmount;
+        _tokens[tokenGive_][_msgSender()] -= amountGive_;
+        amountGive_-=_feeAmount;
         _orderCount = _orderCount + 1;
         _orders[_orderCount] = Order(
             _orderCount,
@@ -347,13 +406,10 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
         address tokenGive_,
         uint256 amountGive_
     ) internal {
-        uint256 _feeAmount = (amountGet_ * (_feePercent)) / (bp);
-        require(_tokens[tokenGet_][_msgSender()] >= amountGet_ + _feeAmount, "Not enough tokens to cover exchange fees");
-        _tokens[tokenGet_][_msgSender()] = _tokens[tokenGet_][_msgSender()] - (amountGet_ + (_feeAmount));
-        _tokens[tokenGet_][user_] = _tokens[tokenGet_][user_] + (amountGet_);
-        _tokens[tokenGet_][_feeAccount] = _tokens[tokenGet_][_feeAccount] + (_feeAmount);
-        _tokens[tokenGive_][user_] = _tokens[tokenGive_][user_] - (amountGive_);
-        _tokens[tokenGive_][_msgSender()] = _tokens[tokenGive_][_msgSender()] + (amountGive_);
+        _tokens[tokenGive_][user_] -= amountGive_;
+        _tokens[tokenGet_][_msgSender()] -= amountGet_;
+        _tokens[tokenGive_][_msgSender()] += amountGive_;
+        _tokens[tokenGet_][user_] += amountGet_;
         emit OrderFilled(id_, user_, tokenGet_, amountGet_, tokenGive_, amountGive_, _msgSender(), block.timestamp);
     }
 }
