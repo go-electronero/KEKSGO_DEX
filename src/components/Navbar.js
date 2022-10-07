@@ -18,7 +18,7 @@ class Navbar extends Component{
               <li className="nav-item">
                 <a
                  className="nav-link small" 
-                 href={`https://etherscan.io/address/${this.props.account}`}
+                 href={`https://mainnet-explorer.kekchain.com/address/${this.props.account}`}
                  target="_blank"
                  rel="noopener noreferrer"
                  >
