@@ -44,7 +44,7 @@ const showForm = (props) => {
             makeBuyOrder(dispatch, exchange, token, web3, buyOrder, account)
           }}>
           <div className="form-group small">
-            <label>Buy Amount (ESKO)</label>
+            <label>Buy Amount (TOKEN)</label>
             <div className="input-group">
               <input
                 type="text"
@@ -68,7 +68,7 @@ const showForm = (props) => {
             </div>
           </div>
           <button type="submit" className="btn btn-info btn-sm btn-block">Buy Order</button>
-          { showBuyTotal ? <small>Total: {buyOrder.amount * buyOrder.price} ETH</small> : null }
+          { showBuyTotal ? <small>Total: {buyOrder.amount * buyOrder.price} KEK</small> : null }
         </form>
 
       </Tab>
@@ -80,7 +80,7 @@ const showForm = (props) => {
           makeSellOrder(dispatch, exchange, token, web3, sellOrder, account)
         }}>
         <div className="form-group small">
-          <label>Sell Amount(ESKO)</label>
+          <label>Sell Amount(TOKEN)</label>
           <div className="input-group">
             <input
               type="text"
@@ -104,7 +104,7 @@ const showForm = (props) => {
           </div>
         </div>
         <button type="submit" className="btn btn-info btn-sm btn-block">Sell Order</button>
-        { showSellTotal ? <small>Total: {sellOrder.amount * sellOrder.price} ETH</small> : null }
+        { showSellTotal ? <small>Total: {sellOrder.amount * sellOrder.price} KEK</small> : null }
       </form>
 
       </Tab>
