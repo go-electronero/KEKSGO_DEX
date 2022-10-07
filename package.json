@@ -1,12 +1,12 @@
 {
-  "name": "dex",
+  "name": "KEKSGO_DAX",
   "version": "0.2.0",
-  "description": "Decentralized Ethereum Token Exchange",
-  "author": "ileskov584@gmail.com",
+  "description": "Decentralized Autonomous KEK / KEP20 Exchange",
+  "author": "interchained@gmail.com",
   "private": true,
-  "homepage": "http://.",
+  "homepage": "https://.",
   "engines": {
-    "node": "8.11.1"
+    "node": ">=8.11.1"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.7.3",
@@ -65,10 +65,10 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ILESKOV/LESKOVDEXV1.git"
+    "url": "git+https://github.com/go-electronero/KEKSGO_DEX.git"
   },
   "bugs": {
-    "url": "https://github.com/ILESKOV/LESKOVDEXV1/issues"
+    "url": "https://github.com/go-electronero/KEKSGO_DEX/issues"
   }
 }
 
