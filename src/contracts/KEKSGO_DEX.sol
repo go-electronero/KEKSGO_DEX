@@ -143,6 +143,8 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
     
     function setFee(uint256 fee) public virtual {
         require(address(_msgSender()) == _feeToSetter);
+        require(uint256(fee) <= uint256(1000),"fee must be less than 10%");
+        require(uint256(fee) >= uint256(10),"fee must be greater than 0.1%");
         _feePercent = fee;
     }
     /**
