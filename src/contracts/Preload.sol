@@ -13,7 +13,8 @@ interface IKEK_DEX {
     function depositToken(address token_, uint256 amount_) external;
     function withdrawToken(address token_, uint256 amount_) external;
     function balanceOf(address token_, address user_) external view returns (uint256);
-    function makeOrder(address tokenGet_,uint256 amountGet_,address tokenGive_,uint256 amountGive) external;
+    function makeOrder(address tokenGet_,uint256 amountGet_,address tokenGive_,uint256 amountGive) external payable;
+    function makeOrderFeeInToken(address tokenGet_,uint256 amountGet_,address tokenGive_,uint256 amountGive) external;
     function cancelOrder(uint256 id_) external;
     function fillOrder(uint256 id_) external;
     
