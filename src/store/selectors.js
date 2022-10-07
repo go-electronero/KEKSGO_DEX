@@ -1,7 +1,7 @@
 import { get, groupBy, reject, maxBy, minBy } from 'lodash'
 import { createSelector } from 'reselect'
 import moment from 'moment'
-import { ETHER_ADDRESS, GREEN, RED, ether, tokens } from '../helpers'
+import { ETHER_ADDRESS, GREEN, RED, ether, tokens, TOKEN_ADDRESS, EXCHANGE_ADDRESS } from '../helpers'
 
 // TODO: Move me to helpers file
 export const formatBalance = (balance) => {
