@@ -241,6 +241,7 @@ contract KEKSGO_DEX {
     ) public {
         require(amountGet_ != 0, "Getting amount cannot be zero");
         require(amountGive_ != 0, "Giving amount cannot be zero");
+        require(_tokens[tokenGive_][msg.sender] >= amountGive_, "Must deposit token to make orders in token!");
         _orderCount = _orderCount + 1;
         _orders[_orderCount] = Order(
             _orderCount,
