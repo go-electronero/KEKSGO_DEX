@@ -1,7 +1,7 @@
 import React, {Component} from 'react'
 import { connect } from 'react-redux'
 import { accountSelector } from '../store/selectors'
-import logo from '../images/lesko.png' 
+import logo from '../images/logo.png' 
 
 
 
