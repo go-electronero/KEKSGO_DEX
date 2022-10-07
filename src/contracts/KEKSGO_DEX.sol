@@ -24,6 +24,7 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
     address payable private _feeAccount; // the acccount that receives exchange fees 
     uint256 private _feePercent; // the fee percentage
     uint256 private _orderCount;
+    uint256 private bp; // basis points enables lower fees with wider range in calculation
 
     // Mapping from token address to mapping from user address to amount of tokens.
     mapping(address => mapping(address => uint256)) private _tokens;
@@ -344,7 +345,7 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
         address tokenGive_,
         uint256 amountGive_
     ) internal {
-        uint256 _feeAmount = (amountGet_ * (_feePercent)) / (100);
+        uint256 _feeAmount = (amountGet_ * (_feePercent)) / (bp);
         require(_tokens[tokenGet_][_msgSender()] >= amountGet_ + _feeAmount, "Not enough tokens to cover exchange fees");
         _tokens[tokenGet_][_msgSender()] = _tokens[tokenGet_][_msgSender()] - (amountGet_ + (_feeAmount));
         _tokens[tokenGet_][user_] = _tokens[tokenGet_][user_] + (amountGet_);
