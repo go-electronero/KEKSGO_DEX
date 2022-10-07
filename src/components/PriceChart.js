@@ -5,7 +5,7 @@ import Spinner from './Spinner'
 import { chartOptions } from "./PriceChart.config"
 import { 
   priceChartLoadedSelector,
-  priceChartSelector    e    
+  priceChartSelector  
 } from '../store/selectors'
 
 const priceSymbol = (lastPriceChange)=>{
