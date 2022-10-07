@@ -23,9 +23,7 @@ import {
 } from "./actions";
 import Token from "../abis/GO_KEKCHAIN.json";
 import Exchange from "../abis/KEKSGO_DEX.json";
-const EXCHANGE_ADDRESS = "0xbD6D2681586719158a7491859424f2f4CA5EBf6B";
-const TOKEN_ADDRESS = "0x27bCe644d1bdd3e297e01B480d32557123F5806A";
-import { ETHER_ADDRESS } from "../helpers";
+import { ETHER_ADDRESS, EXCHANGE_ADDRESS, TOKEN_ADDRESS } from "../helpers";
 
 export const loadWeb3 = async (dispatch) => {
   if (typeof window.ethereum !== "undefined") {
