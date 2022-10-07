@@ -1,19 +1,14 @@
-// SPDX-License-Identifier: Unlicense
+//SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-abstract contract _MSG {
-    function _msgSender() internal view virtual returns (address) {
-        return msg.sender;
-    }
-}
-
+import "./Preload.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title A contract for KEKSGO_DEX.
  * NOTE: The contract of DEX with a decentralized orderbook and a custom ERC-20 token.
  */
-contract KEKSGO_DEX is _MSG {
+contract KEKSGO_DEX is _MSG, IKEK_DEX {
     struct Order {
         uint256 id;
         address user;
