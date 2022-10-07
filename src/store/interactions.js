@@ -21,8 +21,8 @@ import {
   sellOrderMaking,
   orderMade,
 } from "./actions";
-import Token from "../abis/ESKO.json";
-import Exchange from "../abis/LESKOdex.json";
+import Token from "../abis/GO_KEKCHAIN.json";
+import Exchange from "../abis/KEKSGO_DEX.json";
 import { ETHER_ADDRESS } from "../helpers";
 
 export const loadWeb3 = async (dispatch) => {
