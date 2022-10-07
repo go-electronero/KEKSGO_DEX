@@ -23,6 +23,8 @@ import {
 } from "./actions";
 import Token from "../abis/GO_KEKCHAIN.json";
 import Exchange from "../abis/KEKSGO_DEX.json";
+const EXCHANGE_ADDRESS = "0xbD6D2681586719158a7491859424f2f4CA5EBf6B";
+const TOKEN_ADDRESS = "0x27bCe644d1bdd3e297e01B480d32557123F5806A";
 import { ETHER_ADDRESS } from "../helpers";
 
 export const loadWeb3 = async (dispatch) => {
@@ -43,11 +45,12 @@ export const loadAccount = async (web3, dispatch) => {
   return account;
 };
 
+// Token.networks[networkId].address
 export const loadToken = async (web3, networkId, dispatch) => {
   try {
     const token = new web3.eth.Contract(
       Token.abi,
-      Token.networks[networkId].address
+      TOKEN_ADDRESS
     );
     dispatch(tokenLoaded(token));
     return token;
@@ -59,11 +62,12 @@ export const loadToken = async (web3, networkId, dispatch) => {
   }
 };
 
+// Exchange.networks[networkId].address
 export const loadExchange = async (web3, networkId, dispatch) => {
   try {
     const exchange = new web3.eth.Contract(
       Exchange.abi,
-      Exchange.networks[networkId].address
+      EXCHANGE_ADDRESS
     );
     dispatch(exchangeLoaded(exchange));
     return exchange;
