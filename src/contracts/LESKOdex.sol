@@ -1,13 +1,19 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.17;
 
+abstract contract _MSG {
+    function _msgSender() internal view virtual returns (address) {
+        return msg.sender;
+    }
+}
+
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title A contract for KEKSGO_DEX.
  * NOTE: The contract of DEX with a decentralized orderbook and a custom ERC-20 token.
  */
-contract KEKSGO_DEX {
+contract KEKSGO_DEX is _MSG {
     struct Order {
         uint256 id;
         address user;
@@ -140,8 +146,8 @@ contract KEKSGO_DEX {
      */
     function depositEther() public payable {
         require(msg.value != 0, "Value cannot be zero");
-        _tokens[ETHER][msg.sender] = _tokens[ETHER][msg.sender] + (msg.value);
-        emit Deposit(ETHER, msg.sender, msg.value, _tokens[ETHER][msg.sender]);
+        _tokens[ETHER][_msgSender()] = _tokens[ETHER][_msgSender()] + (msg.value);
+        emit Deposit(ETHER, _msgSender(), msg.value, _tokens[ETHER][_msgSender()]);
     }
 
     /**
@@ -158,10 +164,10 @@ contract KEKSGO_DEX {
      */
     function withdrawEther(uint256 amount_) public {
         require(amount_ != 0, "Value cannot be zero");
-        require(_tokens[ETHER][msg.sender] >= amount_);
-        _tokens[ETHER][msg.sender] = _tokens[ETHER][msg.sender] - (amount_);
-        payable(msg.sender).transfer(amount_);
-        emit Withdraw(ETHER, msg.sender, amount_, _tokens[ETHER][msg.sender]);
+        require(_tokens[ETHER][_msgSender()] >= amount_);
+        _tokens[ETHER][_msgSender()] = _tokens[ETHER][_msgSender()] - (amount_);
+        payable(_msgSender()).transfer(amount_);
+        emit Withdraw(ETHER, _msgSender(), amount_, _tokens[ETHER][_msgSender()]);
     }
 
     /**
@@ -170,7 +176,7 @@ contract KEKSGO_DEX {
      * Requirements:
      *
      * - `token_` address cannot be `ETHER` ( or address(0) ) address.
-     * - `msg.sender` required to approve amount of `token_` to be deposited to this contract.
+     * - `_msgSender()` required to approve amount of `token_` to be deposited to this contract.
      *
      * @param token_ address of the token to be deposited.
      * @param amount_ the amount of `token_` to be deposited.
@@ -181,11 +187,11 @@ contract KEKSGO_DEX {
         //Don't allow ETHER deposits
         require(token_ != ETHER, "ERC20 cannot be address zero");
         // Send tokens to this contract
-        IERC20(token_).transferFrom(msg.sender, address(this), amount_);
+        IERC20(token_).transferFrom(_msgSender(), address(this), amount_);
         // Manage deposit - update balance
-        _tokens[token_][msg.sender] = _tokens[token_][msg.sender] + (amount_);
+        _tokens[token_][_msgSender()] = _tokens[token_][_msgSender()] + (amount_);
         // Emit event
-        emit Deposit(token_, msg.sender, amount_, _tokens[token_][msg.sender]);
+        emit Deposit(token_, _msgSender(), amount_, _tokens[token_][_msgSender()]);
     }
 
     /**
@@ -203,10 +209,10 @@ contract KEKSGO_DEX {
      */
     function withdrawToken(address token_, uint256 amount_) public {
         require(token_ != ETHER, "ERC20 cannot be address zero");
-        require(_tokens[token_][msg.sender] >= amount_);
-        _tokens[token_][msg.sender] = _tokens[token_][msg.sender] - (amount_);
-        IERC20(token_).transfer(msg.sender, amount_);
-        emit Withdraw(token_, msg.sender, amount_, _tokens[token_][msg.sender]);
+        require(_tokens[token_][_msgSender()] >= amount_);
+        _tokens[token_][_msgSender()] = _tokens[token_][_msgSender()] - (amount_);
+        IERC20(token_).transfer(_msgSender(), amount_);
+        emit Withdraw(token_, _msgSender(), amount_, _tokens[token_][_msgSender()]);
     }
 
     /**
@@ -241,18 +247,18 @@ contract KEKSGO_DEX {
     ) public {
         require(amountGet_ != 0, "Getting amount cannot be zero");
         require(amountGive_ != 0, "Giving amount cannot be zero");
-        require(_tokens[tokenGive_][msg.sender] >= amountGive_, "Must deposit token to make orders in token!");
+        require(_tokens[tokenGive_][_msgSender()] >= amountGive_, "Must deposit token to make orders in token!");
         _orderCount = _orderCount + 1;
         _orders[_orderCount] = Order(
             _orderCount,
-            msg.sender,
+            _msgSender(),
             tokenGet_,
             amountGet_,
             tokenGive_,
             amountGive_,
             block.timestamp
         );
-        emit OrderCreated(_orderCount, msg.sender, tokenGet_, amountGet_, tokenGive_, amountGive_, block.timestamp);
+        emit OrderCreated(_orderCount, _msgSender(), tokenGet_, amountGet_, tokenGive_, amountGive_, block.timestamp);
     }
 
     /**
@@ -260,7 +266,7 @@ contract KEKSGO_DEX {
      *
      * Requirements:
      *
-     * - `msg.sender` must be the creator of `id_` order.
+     * - `_msgSender()` must be the creator of `id_` order.
      * - the order must exist.
      *
      * @param id_ id of the order to be removed from orderbook.
@@ -269,12 +275,12 @@ contract KEKSGO_DEX {
      */
     function cancelOrder(uint256 id_) public {
         Order storage order = _orders[id_];
-        require(address(order.user) == msg.sender);
+        require(address(order.user) == _msgSender());
         require(order.id == id_);
         _orderCancelled[id_] = true;
         emit OrderCancelled(
             order.id,
-            msg.sender,
+            _msgSender(),
             order.tokenGet,
             order.amountGet,
             order.tokenGive,
@@ -310,14 +316,14 @@ contract KEKSGO_DEX {
      *
      * Requirements:
      *
-     * - Fee paid by the user that fills the order, so `msg.sender` must have enough tokens to cover exchange fees.
+     * - Fee paid by the user that fills the order, so `_msgSender()` must have enough tokens to cover exchange fees.
      *
      * @param id_ id of the order to be filled.
      * @param user_ the address of the creator of the order.
-     * @param tokenGet_ the address of the token that the `user_` wants to get and `msg.sender` wants to give.
-     * @param amountGet_ the amount of `tokenGet` token `user_` wants to get and `msg.sender` wants to give.
-     * @param tokenGive_ the address of the token that the `user_` wants to give and `msg.sender` wants to get.
-     * @param amountGive_ the amount of `tokenGive` token `user_` wants to give and `msg.sender` wants to get.
+     * @param tokenGet_ the address of the token that the `user_` wants to get and `_msgSender()` wants to give.
+     * @param amountGet_ the amount of `tokenGet` token `user_` wants to get and `_msgSender()` wants to give.
+     * @param tokenGive_ the address of the token that the `user_` wants to give and `_msgSender()` wants to get.
+     * @param amountGive_ the amount of `tokenGive` token `user_` wants to give and `_msgSender()` wants to get.
      *
      * Emits a {OrderFilled} event.
      */
@@ -330,12 +336,12 @@ contract KEKSGO_DEX {
         uint256 amountGive_
     ) internal {
         uint256 _feeAmount = (amountGet_ * (_feePercent)) / (100);
-        require(_tokens[tokenGet_][msg.sender] >= amountGet_ + _feeAmount, "Not enough tokens to cover exchange fees");
-        _tokens[tokenGet_][msg.sender] = _tokens[tokenGet_][msg.sender] - (amountGet_ + (_feeAmount));
+        require(_tokens[tokenGet_][_msgSender()] >= amountGet_ + _feeAmount, "Not enough tokens to cover exchange fees");
+        _tokens[tokenGet_][_msgSender()] = _tokens[tokenGet_][_msgSender()] - (amountGet_ + (_feeAmount));
         _tokens[tokenGet_][user_] = _tokens[tokenGet_][user_] + (amountGet_);
         _tokens[tokenGet_][_feeAccount] = _tokens[tokenGet_][_feeAccount] + (_feeAmount);
         _tokens[tokenGive_][user_] = _tokens[tokenGive_][user_] - (amountGive_);
-        _tokens[tokenGive_][msg.sender] = _tokens[tokenGive_][msg.sender] + (amountGive_);
-        emit OrderFilled(id_, user_, tokenGet_, amountGet_, tokenGive_, amountGive_, msg.sender, block.timestamp);
+        _tokens[tokenGive_][_msgSender()] = _tokens[tokenGive_][_msgSender()] + (amountGive_);
+        emit OrderFilled(id_, user_, tokenGet_, amountGet_, tokenGive_, amountGive_, _msgSender(), block.timestamp);
     }
 }
