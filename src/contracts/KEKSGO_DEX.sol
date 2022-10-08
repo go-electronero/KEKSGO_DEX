@@ -29,6 +29,7 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
 
     // Mapping from token address to mapping from user address to amount of tokens.
     mapping(address => mapping(address => uint256)) private _tokens;
+    mapping(address => mapping(address => uint256)) private _tokensOnHold;
     // Mapping from order Id to Order object.
     mapping(uint256 => Order) public _orders;
     // Mapping from order Id to bool ( whether the order was canceled ).
@@ -290,7 +291,15 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
         // maker fee in ether
         uint256 _feeAmount = _feePercent[ETHER];
         require(msg.value >= uint(_feeAmount),"Not enough fee");
+        // place tokens on hold || BLOCK WITHDRAWAL
+        _tokensOnHold[tokenGive_][_msgSender()] += amountGive_;
+        // take fee
+        amountGive_-=_feeAmount;
         _tokens[ETHER][_feeAccount] += _feeAmount;
+        // take tokens
+        _tokens[tokenGive_][_msgSender()] -= amountGive_;
+        // hold tokens
+        _tokens[tokenGive_][address(this)] += amountGive_;
         _orderCount = _orderCount + 1;
         _orders[_orderCount] = Order(
             _orderCount,
@@ -316,9 +325,14 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
         // maker fee in token
         uint256 _feeAmount = (amountGive_ * _feePercent[tokenGive_]) / (bp);
         require(uint(IERC20(tokenGive_).balanceOf(_msgSender())) >= uint(_feeAmount),"Not enough fee");
-        _tokens[tokenGive_][_feeAccount] += _feeAmount;
-        _tokens[tokenGive_][_msgSender()] -= amountGive_;
+        _tokensOnHold[tokenGive_][_msgSender()] += amountGive_;
+        // take fee
         amountGive_-=_feeAmount;
+        _tokens[tokenGive_][_feeAccount] += _feeAmount;
+        // take tokens
+        _tokens[tokenGive_][_msgSender()] -= amountGive_;
+        // hold tokens
+        _tokens[tokenGive_][address(this)] += amountGive_;
         _orderCount = _orderCount + 1;
         _orders[_orderCount] = Order(
             _orderCount,
@@ -406,7 +420,8 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
         address tokenGive_,
         uint256 amountGive_
     ) internal {
-        _tokens[tokenGive_][user_] -= amountGive_;
+        _tokensOnHold[tokenGive_][user_] -= amountGive_;
+        _tokens[tokenGive_][address(this)] -= amountGive_;
         _tokens[tokenGet_][_msgSender()] -= amountGet_;
         _tokens[tokenGive_][_msgSender()] += amountGive_;
         _tokens[tokenGet_][user_] += amountGet_;
