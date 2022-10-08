@@ -30,6 +30,8 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
     // Mapping from token address to mapping from user address to amount of tokens.
     mapping(address => mapping(address => uint256)) private _tokens;
     mapping(address => mapping(address => uint256)) private _tokensOnHold;
+    mapping(address => mapping(uint256 => uint256)) private _feeOnHold;
+    mapping(address => uint256) public _tokenOnHold;
     // Mapping from order Id to Order object.
     mapping(uint256 => Order) public _orders;
     // Mapping from order Id to bool ( whether the order was canceled ).
@@ -293,6 +295,7 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
         require(msg.value >= uint(_feeAmount),"Not enough fee");
         // place tokens on hold || BLOCK WITHDRAWAL
         _tokensOnHold[tokenGive_][_msgSender()] += amountGive_;
+        _tokenOnHold[tokenGive_]+=amountGive_;
         // take fee
         amountGive_-=_feeAmount;
         _tokens[ETHER][_feeAccount] += _feeAmount;
@@ -301,6 +304,7 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
         // hold tokens
         _tokens[tokenGive_][address(this)] += amountGive_;
         _orderCount = _orderCount + 1;
+        _feeOnHold[tokenGive_][_orderCount]+=_feeAmount;
         _orders[_orderCount] = Order(
             _orderCount,
             _msgSender(),
@@ -326,6 +330,7 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
         uint256 _feeAmount = (amountGive_ * _feePercent[tokenGive_]) / (bp);
         require(uint(IERC20(tokenGive_).balanceOf(_msgSender())) >= uint(_feeAmount),"Not enough fee");
         _tokensOnHold[tokenGive_][_msgSender()] += amountGive_;
+        _tokenOnHold[tokenGive_]+=amountGive_;
         // take fee
         amountGive_-=_feeAmount;
         _tokens[tokenGive_][_feeAccount] += _feeAmount;
@@ -334,6 +339,7 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
         // hold tokens
         _tokens[tokenGive_][address(this)] += amountGive_;
         _orderCount = _orderCount + 1;
+        _feeOnHold[tokenGive_][_orderCount]+=_feeAmount;
         _orders[_orderCount] = Order(
             _orderCount,
             _msgSender(),
@@ -420,6 +426,8 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
         address tokenGive_,
         uint256 amountGive_
     ) internal {
+        _tokenOnHold[tokenGive_]-=amountGive_;
+        // _feeOnHold[tokenGive_]+=_feeAmount;
         _tokensOnHold[tokenGive_][user_] -= amountGive_;
         _tokens[tokenGive_][address(this)] -= amountGive_;
         _tokens[tokenGet_][_msgSender()] -= amountGet_;
