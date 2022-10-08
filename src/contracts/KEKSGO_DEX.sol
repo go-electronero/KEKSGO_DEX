@@ -252,6 +252,8 @@ contract KEKSGO_DEX is _MSG, IKEK_DEX {
     function withdrawToken(address token_, uint256 amount_) public {
         require(token_ != ETHER, "ERC20 cannot be address zero");
         require(_tokens[token_][_msgSender()] >= amount_);
+        // toDo fix the amount on hold to ensure withdrawls cancel order first!!
+        // require(uint(amount_) < uint(_tokensOnHold[tokenGive_][_msgSender()]),"Cancel orders first!")
         _tokens[token_][_msgSender()] = _tokens[token_][_msgSender()] - (amount_);
         IERC20(token_).transfer(_msgSender(), amount_);
         emit Withdraw(token_, _msgSender(), amount_, _tokens[token_][_msgSender()]);
